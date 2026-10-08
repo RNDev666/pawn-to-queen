@@ -1,8 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
-type Theme = "default" | "midnight-teal" | "midnight-indigo" | "midnight-navy" | "slate-blue";
+type Theme =
+  | "default"
+  | "midnight-teal"
+  | "midnight-indigo"
+  | "midnight-navy"
+  | "slate-blue";
 
 interface ThemeOption {
   id: Theme;
@@ -41,36 +46,51 @@ const themes: ThemeOption[] = [
   },
 ];
 
+// The saved theme lives in localStorage; subscribers are notified on change.
+const themeListeners = new Set<() => void>();
+
+function subscribeToTheme(listener: () => void) {
+  themeListeners.add(listener);
+  return () => themeListeners.delete(listener);
+}
+
+function readSavedTheme(): Theme {
+  const saved = localStorage.getItem("theme");
+  return themes.find((t) => t.id === saved)?.id ?? "default";
+}
+
+function saveTheme(theme: Theme) {
+  localStorage.setItem("theme", theme);
+  themeListeners.forEach((listener) => listener());
+}
+
+function applyTheme(theme: Theme) {
+  if (theme === "default") {
+    document.documentElement.removeAttribute("data-theme");
+  } else {
+    document.documentElement.setAttribute("data-theme", theme);
+  }
+}
+
 export default function ThemeSelector() {
-  const [currentTheme, setCurrentTheme] = useState<Theme>("default");
+  const currentTheme = useSyncExternalStore(
+    subscribeToTheme,
+    readSavedTheme,
+    (): Theme => "default",
+  );
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    // Load saved theme from localStorage
-    const savedTheme = localStorage.getItem("theme") as Theme;
-    if (savedTheme && themes.find((t) => t.id === savedTheme)) {
-      setCurrentTheme(savedTheme);
-      applyTheme(savedTheme);
-    }
-  }, []);
-
-  const applyTheme = (theme: Theme) => {
-    if (theme === "default") {
-      document.documentElement.removeAttribute("data-theme");
-    } else {
-      document.documentElement.setAttribute("data-theme", theme);
-    }
-  };
+    applyTheme(currentTheme);
+  }, [currentTheme]);
 
   const handleThemeChange = (theme: Theme) => {
-    setCurrentTheme(theme);
-    applyTheme(theme);
-    localStorage.setItem("theme", theme);
+    saveTheme(theme);
     setIsOpen(false);
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed right-6 bottom-6 z-50">
       {/* Theme Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -97,7 +117,7 @@ export default function ThemeSelector() {
 
       {/* Theme Options Panel */}
       {isOpen && (
-        <div className="absolute bottom-20 right-0 rounded-2xl bg-white p-4 shadow-2xl backdrop-blur-sm">
+        <div className="absolute right-0 bottom-20 rounded-2xl bg-white p-4 shadow-2xl backdrop-blur-sm">
           <div className="mb-3 text-sm font-bold text-gray-800">
             Color Theme
           </div>
