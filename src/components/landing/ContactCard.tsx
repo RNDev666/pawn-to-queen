@@ -21,7 +21,7 @@ export default function ContactCard({
         id={id}
         className={`group relative overflow-hidden rounded-xl border ${className}`}
         style={{
-          padding: '3px',
+          padding: "3px",
           borderColor: `rgba(var(--border-color), 0.3)`,
         }}
       >
@@ -33,7 +33,7 @@ export default function ContactCard({
               transparent 60deg,
               rgb(var(--accent-primary)) 120deg,
               transparent 180deg)`,
-            animation: 'borderRotate 3s linear infinite',
+            animation: "borderRotate 3s linear infinite",
           }}
         />
 
@@ -59,7 +59,7 @@ export default function ContactCard({
               className="absolute bottom-0 left-0 h-[2px] w-0 transition-all duration-300 ease-out group-hover:w-full"
               style={{
                 backgroundColor: `rgb(var(--accent-primary))`,
-                transformOrigin: 'center',
+                transformOrigin: "center",
               }}
             />
           </a>
